@@ -6,10 +6,6 @@ hands = mp_hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_c
 mp_drawing = mp.solutions.drawing_utils
 cap = cv2.VideoCapture(0)
 
-rodando = True
-pontos_D = 0
-pontos_E = 0
-
 largura_video = 640 # largura da tela (cam)
 altura_video = 480 # altura da tela (cam)
 
