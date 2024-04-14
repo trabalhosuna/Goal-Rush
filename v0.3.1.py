@@ -68,31 +68,31 @@ class Jogo:
             self.altura_video = 480 
             self.running = True
 
-        def run(self):
+        def run(self): #loop para handtrack em segundo thread
             while self.running:
-                success, image = self.cap.read()
+                success, image = self.cap.read() # verifica captura da imagem da camera
                 if not success:
                     print("Erro na captura de imagem.")
                     break
-                image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) # converte para RGB a imagem da camera
                 results = self.hands.process(image_rgb)
 
                 if results.multi_hand_landmarks:
-                    for hand_landmarks in results.multi_hand_landmarks:
-                        self.mp_drawing.draw_landmarks(image, hand_landmarks, self.mp_hands.HAND_CONNECTIONS)
-
+                    for hand_landmarks in results.multi_hand_landmarks: # desenha as linhas entre os pontos
+                        self.mp_drawing.draw_landmarks(image, hand_landmarks, self.mp_hands.HAND_CONNECTIONS) 
+                    #movimenta os jogadores
                     for hand_landmarks in results.multi_hand_landmarks: 
-                        landmark_atual = hand_landmarks.landmark[8] 
+                        landmark_atual = hand_landmarks.landmark[8] # landmark 8 é a ponta do dedo indicador
                         if landmark_atual.x < 0.5: 
                             movimento_esquerda = (landmark_atual.y - self.y_esquerda) * self.velocidade
-                            self.jogador_esquerda.mover(movimento_esquerda) #Move o jogador esq
+                            self.jogador_esquerda.mover(movimento_esquerda) # Move o jogador esq
                             self.y_esquerda = landmark_atual.y
                         if landmark_atual.x > 0.5:
                             movimento_direita = (landmark_atual.y - self.y_direita) * self.velocidade
-                            self.jogador_direita.mover(movimento_direita) #Move o jogador dir
+                            self.jogador_direita.mover(movimento_direita) # Move o jogador dir
                             self.y_direita = landmark_atual.y    
 
-                self.desenhar_linha_vertical(image)
+                self.desenhar_linha_vertical(image) # chama função para linha vertical
                 cv2.imshow('MediaPipe Hands', image)
                 key = cv2.waitKey(1)
                 if key == ord('q'):
@@ -104,10 +104,10 @@ class Jogo:
         def stop(self):
             self.running = False
 
-        def desenhar_linha_vertical(self, image):
+        def desenhar_linha_vertical(self, image):#Linha vertical no meio da tela para separar jogadores na camera
             cv2.line(image, (self.meio_x, 0), (self.meio_x, self.altura_video), (0, 0, 255), 1) 
         
-    def __init__(self):
+    def __init__(self): # inicializa class Jogo
         pygame.init()
         self.screen = pygame.display.set_mode((1920, 1080)) #define o tamanho da tela do jogo (1920 x 1080)
         pygame.display.set_caption('Goal Rush')
@@ -119,8 +119,6 @@ class Jogo:
         self.rodando_menu = True
         self.rodando_partida = False
 
-    def musica(self,play):
-        self.play
 
     def abrir_menu(self):   # implementa a lógica do menu
 
@@ -128,7 +126,6 @@ class Jogo:
         pressione_ENTER = pygame.image.load('imagens/Pressione_enter.png') #imagem de texto para pressionar enter
         pressione_ESC = pygame.image.load('imagens/Pressione_esc.png') #imagem de texto para pressionar ESC
 
-        
         largura = 1885
         altura = 1750
         largura_original, altura_original = pressione_ENTER.get_size() #pega o tamanho da imagem
@@ -171,14 +168,13 @@ class Jogo:
         pygame.display.set_caption('Goal Rush')
 
         #adicionando imagens aos objetos
-        #Randomiza a escolha dos imagens
-        Goleiro_1 = pygame.image.load('imagens/Goleiro1.png')
-        Goleiro_2 = pygame.image.load('imagens/Goleiro2.png')
-        Goleiro_3 = pygame.image.load('imagens/Goleiro3.png')
-        Goleiro_4 = pygame.image.load('imagens/Goleiro4.png')
+        caminhos_esq = ['imagens\goleiros\Goleiro1_esq.png','imagens\goleiros\Goleiro2_esq.png','imagens\goleiros\Goleiro3_esq.png','imagens\goleiros\Goleiro4_esq.png']
+        caminhos_dir = ['imagens\goleiros\Goleiro1_dir.png','imagens\goleiros\Goleiro2_dir.png','imagens\goleiros\Goleiro3_dir.png','imagens\goleiros\Goleiro4_dir.png']
+        imagens_esq = [pygame.image.load(img) for img in caminhos_esq]  # carrega as imagens dos goleiros em uma lista
+        imagens_dir = [pygame.image.load(img2) for img2 in caminhos_dir]
         #define as imagens das instancias
-        jogador_esquerda_imagem = random.choice([Goleiro_1, Goleiro_4])
-        jogador_direita_imagem = random.choice([Goleiro_2, Goleiro_3])
+        jogador_esquerda_imagem = random.choice(imagens_esq)#Randomiza a escolha dos imagens
+        jogador_direita_imagem = random.choice(imagens_dir)
         bola_imagem = pygame.image.load('imagens/Bola.png')
         #define as instancias dos objetos
         jogador_esquerda = Jogo.Jogador(175, 360, jogador_esquerda_imagem)
