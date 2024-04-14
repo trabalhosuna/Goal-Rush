@@ -5,6 +5,8 @@ import random
 import sys
 import threading
 
+"""Versão estavel, correção de bug"""
+
 class Jogo:
     class Bola:
         def __init__(self, x, y, velocidade, imagem):
@@ -117,12 +119,15 @@ class Jogo:
         self.rodando_menu = True
         self.rodando_partida = False
 
+    def musica(self,play):
+        self.play
+
     def abrir_menu(self):   # implementa a lógica do menu
 
         imagem_fundo = pygame.image.load('imagens/Tela_Inicial_sem_texto.png') #imagem ao fundo do menu
         pressione_ENTER = pygame.image.load('imagens/Pressione_enter.png') #imagem de texto para pressionar enter
         pressione_ESC = pygame.image.load('imagens/Pressione_esc.png') #imagem de texto para pressionar ESC
-        #self.screen.blit(pressione_ENTER, (220, 830))
+
         
         largura = 1885
         altura = 1750
