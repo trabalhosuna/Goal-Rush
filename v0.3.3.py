@@ -5,8 +5,7 @@ import random
 import sys
 import threading
 
-"""Versão estavel, correção de bug, classe de gerenciamente de sons, adicionado mais personagens, alterado a arte do mapa, 
-ajuste no sistema mult-thread"""
+"""Versão estavel, correção de bug, implementada nova art placar, novo sistema de contagem de gol, novas musicas e sistema de biblioteca de musicas"""
 
 class Jogo:
     class Bola: #define a classe bola
@@ -150,7 +149,7 @@ class Jogo:
         self.rodando_partida = False
 
     def abrir_menu(self):   # implementa a lógica do menu
-        self.midia.carregar_musica('musicas/Musica_1.mp3')
+        self.midia.carregar_musica('musicas/Musica_theme.mp3')
         self.midia.reproduzir_musica(loops=-1)
         self.midia.definir_volume(0.4)
 
@@ -193,7 +192,9 @@ class Jogo:
             clock.tick(60)
 
     def abrir_partida(self): # implementa a lógica da partida
-        self.midia.carregar_musica('musicas/Musica_2.mp3')
+        playlist = ['musicas/Musica_2.mp3', 'musicas/Kickin_Pixels.mp3', 'musicas/Samba_on_the_Soccer_Field.mp3', 'musicas/Samba_on_the_Soccer_Field_2.mp3', 'musicas/The_Ballers_Tango.pm3']
+        musica=random.choice(playlist)
+        self.midia.carregar_musica(musica)
         self.midia.reproduzir_musica(loops=-1)
         self.midia.definir_volume(0.3) # define o volume da música
 
@@ -209,6 +210,8 @@ class Jogo:
         caminhos_dir = ['imagens\goleiros\Goleiro1_dir.png','imagens\goleiros\Goleiro2_dir.png','imagens\goleiros\Goleiro3_dir.png','imagens\goleiros\Goleiro4_dir.png']
         imagens_esq = [pygame.image.load(img) for img in caminhos_esq]  # carrega as imagens dos goleiros em uma lista
         imagens_dir = [pygame.image.load(img2) for img2 in caminhos_dir]
+        imagem_placar = pygame.image.load('imagens/placar.png')
+        imagem_fundo = pygame.image.load('imagens/Campo3novo.png') #imagem ao fundo do jogo
         #define as imagens das instancias
         jogador_esquerda_imagem = random.choice(imagens_esq)#Randomiza a escolha dos imagens
         jogador_direita_imagem = random.choice(imagens_dir)
@@ -233,8 +236,8 @@ class Jogo:
                         self.rodando_menu = True
 
             screen.fill((0, 0, 0))
-            imagem_fundo = pygame.image.load('imagens/Campo3novo.png') #imagem ao fundo do jogo
             screen.blit(imagem_fundo, (0, 0))    #desenha a imagem ao fundo
+            screen.blit(imagem_placar,(788, 20)) #desenha o placar
 
             jogador_esquerda.desenhar(screen)    #desenha os objetos
             jogador_direita.desenhar(screen)
@@ -264,17 +267,15 @@ class Jogo:
                 bola_objeto.velocidade_y *= -1
                 pontos_E += 1
 
-            
-            texto_placar = self.fonte.render(f' {pontos_E}   x   {pontos_D}', True, (255, 255, 255))  # Texto do placar
-            screen.blit(texto_placar, (10, 10))
-
+            texto_placar_E = self.fonte.render(f'{pontos_E}', True, (255, 255, 255))  # Texto do placar esquerdo
+            texto_placar_D = self.fonte.render(f'{pontos_D}', True, (255, 255, 255))  # Texto do placar esquerdo
+            screen.blit(texto_placar_E, (900, 7)) #desenha o placar
+            screen.blit(texto_placar_D, (1000, 7)) #desenha o placar
             pygame.display.flip()  # Atualiza a tela
             self.clock.tick(self.FPS)
 
         # Parar a thread de detecção de mão quando sair do loop principal
         hand_instance.stop()
-
-
 
     def executar(self):
         while True:

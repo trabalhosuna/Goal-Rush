@@ -5,8 +5,7 @@ import random
 import sys
 import threading
 
-"""Versão estavel, correção de bug, classe de gerenciamente de sons, adicionado mais personagens, alterado a arte do mapa, 
-ajuste no sistema mult-thread"""
+"""Versão estavel, """
 
 class Jogo:
     class Bola: #define a classe bola
@@ -139,18 +138,22 @@ class Jogo:
 
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((1920, 1080)) #define o tamanho da tela do jogo (1920 x 1080)
+        self.screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN) #define o tamanho da tela do jogo (1920 x 1080)
         pygame.display.set_caption('Goal Rush')
         self.clock = pygame.time.Clock()
         self.FPS = 60
         self.fonte = pygame.font.SysFont("Pixeled Regular", 30)
+        self.fonte2 = pygame.font.SysFont("Pixeled Regular", 20)
         self.WHITE = (255, 255, 255)
         self.BLACK = (0, 0, 0)
         self.rodando_menu = True
         self.rodando_partida = False
+        self.rodando_winscreen = False
+        self.pontos_D = 0
+        self.pontos_E = 0
 
     def abrir_menu(self):   # implementa a lógica do menu
-        self.midia.carregar_musica('musicas/Musica_1.mp3')
+        self.midia.carregar_musica('musicas/Musica_theme.mp3')
         self.midia.reproduzir_musica(loops=-1)
         self.midia.definir_volume(0.4)
 
@@ -158,7 +161,7 @@ class Jogo:
         pressione_ENTER = pygame.image.load('imagens/Pressione_enter.png') #imagem de texto para pressionar enter
         pressione_ESC = pygame.image.load('imagens/Pressione_esc.png') #imagem de texto para pressionar ESC
         
-        largura = 1885
+        largura = 1885 #animação
         altura = 1750
         largura_original, altura_original = pressione_ENTER.get_size() #pega o tamanho da imagem
         clock = pygame.time.Clock()
@@ -193,22 +196,26 @@ class Jogo:
             clock.tick(60)
 
     def abrir_partida(self): # implementa a lógica da partida
-        self.midia.carregar_musica('musicas/Musica_2.mp3')
+        playlist = ['musicas/Musica_2.mp3', 'musicas/Kickin_Pixels.mp3', 'musicas/Samba_on_the_Soccer_Field.mp3', 'musicas/Samba_on_the_Soccer_Field_2.mp3', 'musicas/The_Ballers_Tango.mp3']
+        musica=random.choice(playlist)
+        self.midia.carregar_musica(musica)
         self.midia.reproduzir_musica(loops=-1)
         self.midia.definir_volume(0.3) # define o volume da música
 
-        pontos_D = 0 #zera os pontos antes do loop
-        pontos_E = 0
+        self.pontos_D = 0 #zera os pontos antes do loop
+        self.pontos_E = 0
 
         screen = pygame.display.set_mode((1920, 1080)) #define o tamanho da tela do jogo (1920 x 1080)
         pygame.display.set_caption('Goal Rush')
 
         #adicionando imagens aos objetos
         #Randomiza a escolha dos imagens
-        caminhos_esq = ['imagens\goleiros\Goleiro1_esq.png','imagens\goleiros\Goleiro2_esq.png','imagens\goleiros\Goleiro3_esq.png','imagens\goleiros\Goleiro4_esq.png']
-        caminhos_dir = ['imagens\goleiros\Goleiro1_dir.png','imagens\goleiros\Goleiro2_dir.png','imagens\goleiros\Goleiro3_dir.png','imagens\goleiros\Goleiro4_dir.png']
+        caminhos_esq = ['imagens/goleiros/Goleiro1_esq.png','imagens/goleiros/Goleiro2_esq.png','imagens/goleiros/Goleiro3_esq.png','imagens/goleiros/Goleiro4_esq.png']
+        caminhos_dir = ['imagens/goleiros/Goleiro1_dir.png','imagens/goleiros/Goleiro2_dir.png','imagens/goleiros/Goleiro3_dir.png','imagens/goleiros/Goleiro4_dir.png']
         imagens_esq = [pygame.image.load(img) for img in caminhos_esq]  # carrega as imagens dos goleiros em uma lista
         imagens_dir = [pygame.image.load(img2) for img2 in caminhos_dir]
+        imagem_placar = pygame.image.load('imagens/placar.png')
+        imagem_fundo = pygame.image.load('imagens/Campo3novo.png') #imagem ao fundo do jogo
         #define as imagens das instancias
         jogador_esquerda_imagem = random.choice(imagens_esq)#Randomiza a escolha dos imagens
         jogador_direita_imagem = random.choice(imagens_dir)
@@ -223,6 +230,8 @@ class Jogo:
         hand_instance = Jogo.HandTracker(jogador_esquerda, jogador_direita)
         hand_instance.start()
 
+        tempo_inicial= pygame.time.get_ticks()
+
         while self.rodando_partida: #loop principal da partida
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -233,8 +242,8 @@ class Jogo:
                         self.rodando_menu = True
 
             screen.fill((0, 0, 0))
-            imagem_fundo = pygame.image.load('imagens/Campo3novo.png') #imagem ao fundo do jogo
             screen.blit(imagem_fundo, (0, 0))    #desenha a imagem ao fundo
+            screen.blit(imagem_placar,(788, 20)) #desenha o placar
 
             jogador_esquerda.desenhar(screen)    #desenha os objetos
             jogador_direita.desenhar(screen)
@@ -251,29 +260,68 @@ class Jogo:
                 bola_objeto.velocidade_x *= -1
 
             linha_gol_E = pygame.draw.rect(screen, (255, 10, 10), pygame.Rect(140, 400, 6, 263), 6)
-            if bola_objeto.rect.colliderect(linha_gol_E):
-                bola_objeto.x = (960)
+            if bola_objeto.rect.colliderect(linha_gol_E): # Verifica se a bola colidiu com a linha do gol
+                bola_objeto.x = (960) #centraliza a bola
                 bola_objeto.y = (540)
                 bola_objeto.velocidade_x *= -1
-                pontos_D += 1
+                self.pontos_D += 1
                 
             linha_gol_D = pygame.draw.rect(screen, (255, 10, 10), pygame.Rect(1773, 400, 6, 263), 6)    # Linha do gol
-            if bola_objeto.rect.colliderect(linha_gol_D):
-                bola_objeto.x = (960)
+            if bola_objeto.rect.colliderect(linha_gol_D): # Verifica se a bola colidiu com a linha do gol
+                bola_objeto.x = (960) #centraliza a bola
                 bola_objeto.y = (540)
                 bola_objeto.velocidade_y *= -1
-                pontos_E += 1
-
+                self.pontos_E += 1
             
-            texto_placar = self.fonte.render(f' {pontos_E}   x   {pontos_D}', True, (255, 255, 255))  # Texto do placar
-            screen.blit(texto_placar, (10, 10))
+            if self.pontos_E == 8 or self.pontos_D == 8: #numero de gol para o fim da partida
+                self.rodando_winscreen = True
+                self.rodando_partida = False
 
+            tempo_decorrido = 60-((pygame.time.get_ticks() - tempo_inicial)// 1000) # Calcula o tempo decorrido em segundos
+            if tempo_decorrido == 0:
+                self.rodando_menu= True
+                self.rodando_partida = False
+
+            texto_placar_E = self.fonte.render(f'{self.pontos_E}', True, (255, 255, 255))  # Texto do placar esquerdo
+            texto_placar_D = self.fonte.render(f'{self.pontos_D}', True, (255, 255, 255))  # Texto do placar esquerdo
+            texto_cronometro = self.fonte2.render(f'Tempo: {tempo_decorrido} segundos', True, (255, 255, 255))
+            screen.blit(texto_placar_E, (900, 7)) #desenha o placar
+            screen.blit(texto_placar_D, (1000, 7)) #desenha o placar
+            screen.blit(texto_cronometro, (1430, 47))
             pygame.display.flip()  # Atualiza a tela
             self.clock.tick(self.FPS)
 
         # Parar a thread de detecção de mão quando sair do loop principal
         hand_instance.stop()
 
+    def abrir_winscreen(self):   # implementa a lógica da tela de vitoria
+        self.midia.carregar_musica('musicas/Pixelated_Champion.mp3')
+        self.midia.reproduzir_musica(loops=-1)
+        self.midia.definir_volume(0.4)
+
+        imagem_fundo = pygame.image.load('imagens/Fim_partida___Reiniciar.png') #imagem ao fundo do menu
+        clock = pygame.time.Clock()
+
+        while self.rodando_winscreen:  # loop do menu
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.rodando_winscreen = False
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_r:    # Verifica se a tecla R foi pressionada
+                        self.rodando_winscreen = False
+                        self.rodando_menu = True
+                    elif event.key == pygame.K_ESCAPE:    # Verifica se a tecla ESC foi pressionada
+                        self.rodando_winscreen = False
+                        pygame.quit()
+                        sys.exit()
+            texto_placar_E = self.fonte.render(f'{self.pontos_E}', True, (255, 255, 255))  # Texto do placar esquerdo
+            texto_placar_D = self.fonte.render(f'{self.pontos_D}', True, (255, 255, 255))  # Texto do placar esquerdo
+            self.screen.blit(imagem_fundo, (0, 0))
+            self.screen.blit(texto_placar_E, (785, 415)) #desenha o placar
+            self.screen.blit(texto_placar_D, (1110, 415)) #desenha o placar            
+            
+            pygame.display.flip()
+            clock.tick(60)
 
 
     def executar(self):
@@ -282,6 +330,8 @@ class Jogo:
                 self.abrir_menu()
             elif self.rodando_partida:
                 self.abrir_partida()
+            elif self.rodando_winscreen:
+                self.abrir_winscreen()
 
 
 if __name__ == "__main__": # Executa o jogo
