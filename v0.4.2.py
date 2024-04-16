@@ -5,7 +5,7 @@ import random
 import sys
 import threading
 
-"""Versão estavel, adicionado cronometro, limite de tempo e de gols para o fim da partida, implementado arte e tela de winscreen, funcionalida sair com ESC em winscreen"""
+"""Versão estavel, adicionado sistema de vida(nova classe "Vida"), ajustado local do cronometro"""
 
 class Jogo:
     class Bola: #define a classe bola
@@ -136,9 +136,37 @@ class Jogo:
             return pygame.mixer.music.get_busy()
     midia= Radio()
 
+    class Vida():
+        def __init__(self, x, bol):
+            self.sentido = bol
+            self.x = x
+            self.max_vida = 8
+            self.vida = 0
+            self.coracao = []
+            self.imagem_coracao = pygame.image.load('imagens/Coracao.png')
+
+        def add_coracao(self):
+            y = 20
+            if self.vida < self.max_vida:
+                self.vida += 1
+                self.coracao.append((self.x, y))
+                if self.sentido:
+                    self.x += 37
+                else:
+                    self.x -= 37
+
+        def remover_coracao(self):
+            if self.vida > 0:
+                self.vida -= 1
+                self.coracao.pop()
+
+        def desenha_coracao(self):
+            for x, y in self.coracao:
+                self.screen.blit(self.imagem_coracao, (x, y))    
+        
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN) #define o tamanho da tela do jogo (1920 x 1080)
+        self.screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN) #define o tamanho da tela do jogo (1920 x 1080) "meio 960/961"
         pygame.display.set_caption('Goal Rush')
         self.clock = pygame.time.Clock()
         self.FPS = 60
@@ -151,6 +179,7 @@ class Jogo:
         self.rodando_winscreen = False
         self.pontos_D = 0
         self.pontos_E = 0
+
 
     def abrir_menu(self):   # implementa a lógica do menu
         self.midia.carregar_musica('musicas/Musica_theme.mp3')
@@ -196,6 +225,15 @@ class Jogo:
             clock.tick(60)
 
     def abrir_partida(self): # implementa a lógica da partida
+        vidas_jogador_D = Jogo.Vida(((1920/2)+180), True) #cria o objeto da classe Vida que controla as vidas do jogador
+        vidas_jogador_E = Jogo.Vida(((1920/2)-228), False)
+        vidas_jogador_D.screen = self.screen
+        vidas_jogador_E.screen = self.screen
+        arroz= [1,2,3,4,5,6,7,8] #lista para adicionar os pontos de vidas iniciais
+        for _ in arroz:
+            vidas_jogador_D.add_coracao()
+            vidas_jogador_E.add_coracao()
+
         playlist = ['musicas/Musica_2.mp3', 'musicas/Kickin_Pixels.mp3', 'musicas/Samba_on_the_Soccer_Field.mp3', 'musicas/Samba_on_the_Soccer_Field_2.mp3', 'musicas/The_Ballers_Tango.mp3']
         musica=random.choice(playlist)
         self.midia.carregar_musica(musica)
@@ -205,16 +243,13 @@ class Jogo:
         self.pontos_D = 0 #zera os pontos antes do loop
         self.pontos_E = 0
 
-        screen = pygame.display.set_mode((1920, 1080)) #define o tamanho da tela do jogo (1920 x 1080)
-        pygame.display.set_caption('Goal Rush')
-
         #adicionando imagens aos objetos
         #Randomiza a escolha dos imagens
         caminhos_esq = ['imagens/goleiros/Goleiro1_esq.png','imagens/goleiros/Goleiro2_esq.png','imagens/goleiros/Goleiro3_esq.png','imagens/goleiros/Goleiro4_esq.png']
         caminhos_dir = ['imagens/goleiros/Goleiro1_dir.png','imagens/goleiros/Goleiro2_dir.png','imagens/goleiros/Goleiro3_dir.png','imagens/goleiros/Goleiro4_dir.png']
         imagens_esq = [pygame.image.load(img) for img in caminhos_esq]  # carrega as imagens dos goleiros em uma lista
         imagens_dir = [pygame.image.load(img2) for img2 in caminhos_dir]
-        imagem_placar = pygame.image.load('imagens/placar.png')
+        imagem_placar = pygame.image.load('imagens/placar2.png')
         imagem_fundo = pygame.image.load('imagens/Campo3novo.png') #imagem ao fundo do jogo
         #define as imagens das instancias
         jogador_esquerda_imagem = random.choice(imagens_esq)#Randomiza a escolha dos imagens
@@ -241,15 +276,15 @@ class Jogo:
                         self.rodando_partida = False
                         self.rodando_menu = True
 
-            screen.fill((0, 0, 0))
-            screen.blit(imagem_fundo, (0, 0))    #desenha a imagem ao fundo
-            screen.blit(imagem_placar,(788, 20)) #desenha o placar
+            self.screen.fill((0, 0, 0)) #avaliar utilidade************************
+            self.screen.blit(imagem_fundo, (0, 0))    #desenha a imagem ao fundo
+            self.screen.blit(imagem_placar,(788, 20)) #desenha o placar
 
-            jogador_esquerda.desenhar(screen)    #desenha os objetos
-            jogador_direita.desenhar(screen)
-            bola_objeto.desenhar(screen)
+            jogador_esquerda.desenhar(self.screen)    #desenha os objetos
+            jogador_direita.desenhar(self.screen)
+            bola_objeto.desenhar(self.screen)
 
-            linha_campo = pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(142, 109 , 1636, 848), 3)    # Linha do campo
+            linha_campo = pygame.draw.rect(self.screen, (0, 255, 0), pygame.Rect(142, 109 , 1636, 848), 3)    # Linha do campo
             if bola_objeto.rect.colliderect(linha_campo):
                 if bola_objeto.rect.left <= linha_campo.left or bola_objeto.rect.right >= linha_campo.right:
                     bola_objeto.velocidade_x *= -1
@@ -259,19 +294,21 @@ class Jogo:
             if bola_objeto.colide_jogador(jogador_esquerda) or bola_objeto.colide_jogador(jogador_direita):
                 bola_objeto.velocidade_x *= -1
 
-            linha_gol_E = pygame.draw.rect(screen, (255, 10, 10), pygame.Rect(140, 400, 6, 263), 6)
+            linha_gol_E = pygame.draw.rect(self.screen, (255, 10, 10), pygame.Rect(140, 400, 6, 263), 6)
             if bola_objeto.rect.colliderect(linha_gol_E): # Verifica se a bola colidiu com a linha do gol
                 bola_objeto.x = (960) #centraliza a bola
                 bola_objeto.y = (540)
                 bola_objeto.velocidade_x *= -1
                 self.pontos_D += 1
+                vidas_jogador_E.remover_coracao()
                 
-            linha_gol_D = pygame.draw.rect(screen, (255, 10, 10), pygame.Rect(1773, 400, 6, 263), 6)    # Linha do gol
+            linha_gol_D = pygame.draw.rect(self.screen, (255, 10, 10), pygame.Rect(1773, 400, 6, 263), 6)    # Linha do gol
             if bola_objeto.rect.colliderect(linha_gol_D): # Verifica se a bola colidiu com a linha do gol
                 bola_objeto.x = (960) #centraliza a bola
                 bola_objeto.y = (540)
                 bola_objeto.velocidade_y *= -1
                 self.pontos_E += 1
+                vidas_jogador_D.remover_coracao()
             
             if self.pontos_E == 8 or self.pontos_D == 8: #numero de gol para o fim da partida
                 self.rodando_winscreen = True
@@ -284,10 +321,12 @@ class Jogo:
 
             texto_placar_E = self.fonte.render(f'{self.pontos_E}', True, (255, 255, 255))  # Texto do placar esquerdo
             texto_placar_D = self.fonte.render(f'{self.pontos_D}', True, (255, 255, 255))  # Texto do placar esquerdo
-            texto_cronometro = self.fonte2.render(f'Tempo: {tempo_decorrido} segundos', True, (255, 255, 255))
-            screen.blit(texto_placar_E, (900, 7)) #desenha o placar
-            screen.blit(texto_placar_D, (1000, 7)) #desenha o placar
-            screen.blit(texto_cronometro, (1430, 47))
+            texto_cronometro = self.fonte2.render(f'0:{tempo_decorrido}', True, (255, 255, 255))
+            self.screen.blit(texto_placar_E, (900, 7)) #desenha o placar
+            self.screen.blit(texto_placar_D, (1000, 7)) #desenha o placar
+            self.screen.blit(texto_cronometro, (928, 74))
+            vidas_jogador_D.desenha_coracao()
+            vidas_jogador_E.desenha_coracao()
             pygame.display.flip()  # Atualiza a tela
             self.clock.tick(self.FPS)
 

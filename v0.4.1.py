@@ -5,7 +5,7 @@ import random
 import sys
 import threading
 
-"""Versão estavel, adicionado cronometro, limite de tempo e de gols para o fim da partida, implementado arte e tela de winscreen, funcionalida sair com ESC em winscreen"""
+"""Versao com falha***"""
 
 class Jogo:
     class Bola: #define a classe bola
@@ -85,11 +85,11 @@ class Jogo:
                         landmark_atual = hand_landmarks.landmark[8] #landmark 8 é o dedo indicador
                         if landmark_atual.x < 0.5: 
                             movimento_esquerda = (landmark_atual.y - self.y_esquerda) * self.velocidade
-                            self.jogador_esquerda.mover(movimento_esquerda) #Move o jogador esq
+                            self.jogador_direita.mover(movimento_esquerda) #Move o jogador direita
                             self.y_esquerda = landmark_atual.y
                         if landmark_atual.x > 0.5:
                             movimento_direita = (landmark_atual.y - self.y_direita) * self.velocidade
-                            self.jogador_direita.mover(movimento_direita) #Move o jogador dir
+                            self.jogador_esquerda.mover(movimento_direita) #Move o jogador esquerda
                             self.y_direita = landmark_atual.y    
 
                 self.desenhar_linha_vertical(image)
@@ -144,13 +144,14 @@ class Jogo:
         self.FPS = 60
         self.fonte = pygame.font.SysFont("Pixeled Regular", 30)
         self.fonte2 = pygame.font.SysFont("Pixeled Regular", 20)
-        self.WHITE = (255, 255, 255)
-        self.BLACK = (0, 0, 0)
         self.rodando_menu = True
         self.rodando_partida = False
         self.rodando_winscreen = False
-        self.pontos_D = 0
+        self.pontos_D = 0 #pontos do jogador
         self.pontos_E = 0
+        self.max_vida= 10 #maximo de vida dos jogadores
+        self.vida_D = self.max_vida - 5 #vida inicial dos jogadores
+        self.vida_E = self.max_vida - 5
 
     def abrir_menu(self):   # implementa a lógica do menu
         self.midia.carregar_musica('musicas/Musica_theme.mp3')
@@ -196,6 +197,29 @@ class Jogo:
             clock.tick(60)
 
     def abrir_partida(self): # implementa a lógica da partida
+        self.vida_atual_D = self.vida_D
+        self.vida_atual_E = self.vida_E
+        coracoes_D = []
+        def add_hearts(self):
+            x = 10
+            y = 10
+            self.vida_atual_D += 1
+            for _ in range(self.vida_atual_D):
+                self.coracoes_D.append((x, y))
+                x += self.largura_coracao + self.espaco_entre_coracao
+        
+        def remove_heart(self):
+            if self.vida_atual_D > 0:
+                self.vida_atual_D -= 1
+                self.coracoes_D.pop()
+
+
+        '''def desenhar_vidas(self, screen,):
+            for x, y in range(self.coracoes_D):
+                screen.blit(imagem_coracao, (x, y))
+                x += self.largura_coracao + self.espaco_entre_coracao'''
+
+
         playlist = ['musicas/Musica_2.mp3', 'musicas/Kickin_Pixels.mp3', 'musicas/Samba_on_the_Soccer_Field.mp3', 'musicas/Samba_on_the_Soccer_Field_2.mp3', 'musicas/The_Ballers_Tango.mp3']
         musica=random.choice(playlist)
         self.midia.carregar_musica(musica)
@@ -216,6 +240,9 @@ class Jogo:
         imagens_dir = [pygame.image.load(img2) for img2 in caminhos_dir]
         imagem_placar = pygame.image.load('imagens/placar.png')
         imagem_fundo = pygame.image.load('imagens/Campo3novo.png') #imagem ao fundo do jogo
+        imagem_coracao = pygame.image.load('imagens/Coracao.png')
+        self.largura_coracao, self.altura_coracao = imagem_coracao.get_size()
+        self.espaco_entre_coracao= 10
         #define as imagens das instancias
         jogador_esquerda_imagem = random.choice(imagens_esq)#Randomiza a escolha dos imagens
         jogador_direita_imagem = random.choice(imagens_dir)
@@ -241,7 +268,7 @@ class Jogo:
                         self.rodando_partida = False
                         self.rodando_menu = True
 
-            screen.fill((0, 0, 0))
+            screen.fill((0, 0, 0)) #inutil
             screen.blit(imagem_fundo, (0, 0))    #desenha a imagem ao fundo
             screen.blit(imagem_placar,(788, 20)) #desenha o placar
 
@@ -256,7 +283,7 @@ class Jogo:
                 if bola_objeto.rect.top <= linha_campo.top or bola_objeto.rect.bottom >= linha_campo.bottom:
                     bola_objeto.velocidade_y *= -1
 
-            if bola_objeto.colide_jogador(jogador_esquerda) or bola_objeto.colide_jogador(jogador_direita):
+            if bola_objeto.colide_jogador(jogador_esquerda) or bola_objeto.colide_jogador(jogador_direita): #inverte a direção da bola se colidir com o jogador
                 bola_objeto.velocidade_x *= -1
 
             linha_gol_E = pygame.draw.rect(screen, (255, 10, 10), pygame.Rect(140, 400, 6, 263), 6)
@@ -265,6 +292,7 @@ class Jogo:
                 bola_objeto.y = (540)
                 bola_objeto.velocidade_x *= -1
                 self.pontos_D += 1
+                self.vida_E -= 1
                 
             linha_gol_D = pygame.draw.rect(screen, (255, 10, 10), pygame.Rect(1773, 400, 6, 263), 6)    # Linha do gol
             if bola_objeto.rect.colliderect(linha_gol_D): # Verifica se a bola colidiu com a linha do gol
@@ -272,8 +300,9 @@ class Jogo:
                 bola_objeto.y = (540)
                 bola_objeto.velocidade_y *= -1
                 self.pontos_E += 1
+                self.vida_atual_D -= 1
             
-            if self.pontos_E == 8 or self.pontos_D == 8: #numero de gol para o fim da partida
+            if self.vida_E == 0 or self.vida_D == 0: #verifica se a vida esta zerada
                 self.rodando_winscreen = True
                 self.rodando_partida = False
 
@@ -285,14 +314,23 @@ class Jogo:
             texto_placar_E = self.fonte.render(f'{self.pontos_E}', True, (255, 255, 255))  # Texto do placar esquerdo
             texto_placar_D = self.fonte.render(f'{self.pontos_D}', True, (255, 255, 255))  # Texto do placar esquerdo
             texto_cronometro = self.fonte2.render(f'Tempo: {tempo_decorrido} segundos', True, (255, 255, 255))
+            screen.blit(imagem_coracao, (755, 45)) #desenha o coração
             screen.blit(texto_placar_E, (900, 7)) #desenha o placar
             screen.blit(texto_placar_D, (1000, 7)) #desenha o placar
             screen.blit(texto_cronometro, (1430, 47))
+            for x, y in range(coracoes_D):
+                screen.blit(imagem_coracao, (x, y))
+                x += self.largura_coracao + self.espaco_entre_coracao
             pygame.display.flip()  # Atualiza a tela
             self.clock.tick(self.FPS)
 
         # Parar a thread de detecção de mão quando sair do loop principal
         hand_instance.stop()
+        add_hearts()
+        add_hearts()
+        add_hearts()
+        add_hearts()
+        add_hearts()
 
     def abrir_winscreen(self):   # implementa a lógica da tela de vitoria
         self.midia.carregar_musica('musicas/Pixelated_Champion.mp3')

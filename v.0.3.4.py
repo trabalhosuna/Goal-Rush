@@ -272,7 +272,7 @@ class Jogo:
                 bola_objeto.velocidade_y *= -1
                 self.pontos_E += 1
             
-            if self.pontos_E == 2 or self.pontos_D == 2:
+            if self.pontos_E == 8 or self.pontos_D == 8: #numero de gol para o fim da partida
                 self.rodando_winscreen = True
                 self.rodando_partida = False
 
@@ -280,6 +280,7 @@ class Jogo:
             if tempo_decorrido == 0:
                 self.rodando_menu= True
                 self.rodando_partida = False
+
             texto_placar_E = self.fonte.render(f'{self.pontos_E}', True, (255, 255, 255))  # Texto do placar esquerdo
             texto_placar_D = self.fonte.render(f'{self.pontos_D}', True, (255, 255, 255))  # Texto do placar esquerdo
             texto_cronometro = self.fonte.render(f'Tempo: {tempo_decorrido} segundos', True, (255, 255, 255))
